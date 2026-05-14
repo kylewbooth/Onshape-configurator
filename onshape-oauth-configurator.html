@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onshape Part Configurator - OAuth</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #667eea;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 8px;
+        }
+        
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        button.secondary {
+            background: #6c757d;
+        }
+        
+        button.secondary:hover {
+            box-shadow: 0 10px 20px rgba(108, 117, 125, 0.3);
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            display: block;
+        }
+        
+        .help-text {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .auth-note {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 13px;
+            color: #856404;
+            margin-bottom: 20px;
+        }
+        
+        .auth-note strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .auth-status {
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .auth-status.authenticated {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .auth-status.not-authenticated {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Onshape Part Configurator</h1>
+            <p>OAuth Version - No CORS Issues!</p>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <div class="section-title">OAuth Setup</div>
+                <div class="auth-note">
+                    <strong>⚠️ Setup Required:</strong>
+                    You need to register an OAuth app at dev-portal.onshape.com first. Enter your Client ID below.
+                </div>
+                
+                <div class="form-group">
+                    <label for="clientId">OAuth Client ID</label>
+                    <input type="text" id="clientId" placeholder="Enter your OAuth Client ID">
+                    <div class="help-text">From your OAuth application in the Onshape Developer Portal</div>
+                </div>
+                
+                <div id="authStatus" class="auth-status not-authenticated">
+                    <span>❌ Not authenticated</span>
+                </div>
+                
+                <button id="loginBtn">Connect to Onshape</button>
+                <button id="logoutBtn" class="secondary hidden">Disconnect</button>
+            </div>
+            
+            <div id="mainContent" class="hidden">
+                <div class="section">
+                    <div class="section-title">Document Information</div>
+                    
+                    <div class="form-group">
+                        <label for="documentId">Document ID</label>
+                        <input type="text" id="documentId" placeholder="e.g., 1a2b3c4d5e6f7g8h9i0j">
+                        <div class="help-text">Found in the Onshape document URL after /documents/</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="workspaceId">Workspace ID</label>
+                        <input type="text" id="workspaceId" placeholder="e.g., 0a1b2c3d4e5f6g7h8i9j">
+                        <div class="help-text">Found in the URL as w/[id]</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="elementId">Element ID (Part Studio)</label>
+                        <input type="text" id="elementId" placeholder="e.g., 9i8h7g6f5e4d3c2b1a0">
+                        <div class="help-text">Found in the URL as e/[id]</div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">Configuration Selection</div>
+                    
+                    <div class="form-group">
+                        <label for="configuration">Select Configuration</label>
+                        <select id="configuration">
+                            <option value="Default">Default</option>
+                            <option value="First">First</option>
+                            <option value="Second">Second</option>
+                            <option value="Last">Last</option>
+                        </select>
+                        <div class="help-text">Choose from your predefined configurations</div>
+                    </div>
+                </div>
+                
+                <button id="getConfigBtn">Get Current Configuration</button>
+                <button id="applyConfigBtn">Apply Selected Configuration</button>
+                
+                <div id="status" class="status"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const ONSHAPE_BASE_URL = 'https://cad.onshape.com';
+        // IMPORTANT: Replace this with your actual GitHub Pages URL!
+        // Example: 'https://yourusername.github.io/onshape-configurator/oauth-callback.html'
+        const REDIRECT_URI = window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'oauth-callback.html';
+        
+        let accessToken = null;
+        
+        // Check for stored token on load
+        window.addEventListener('load', () => {
+            accessToken = sessionStorage.getItem('onshape_access_token');
+            if (accessToken) {
+                updateAuthStatus(true);
+            }
+            
+            // Check if we're returning from OAuth callback
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            if (code) {
+                handleOAuthCallback(code);
+            }
+        });
+        
+        // Login button
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            const clientId = document.getElementById('clientId').value.trim();
+            if (!clientId) {
+                showStatus('error', 'Please enter your OAuth Client ID first.');
+                return;
+            }
+            
+            sessionStorage.setItem('onshape_client_id', clientId);
+            initiateOAuth(clientId);
+        });
+        
+        // Logout button
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            accessToken = null;
+            sessionStorage.removeItem('onshape_access_token');
+            sessionStorage.removeItem('onshape_refresh_token');
+            updateAuthStatus(false);
+            showStatus('info', 'Disconnected from Onshape.');
+        });
+        
+        // Get configuration button
+        document.getElementById('getConfigBtn').addEventListener('click', async () => {
+            const button = document.getElementById('getConfigBtn');
+            await handleConfigurationRequest(button, 'get');
+        });
+        
+        // Apply configuration button
+        document.getElementById('applyConfigBtn').addEventListener('click', async () => {
+            const button = document.getElementById('applyConfigBtn');
+            await handleConfigurationRequest(button, 'apply');
+        });
+        
+        function initiateOAuth(clientId) {
+            // Generate code verifier and challenge for PKCE
+            const codeVerifier = generateRandomString(128);
+            sessionStorage.setItem('code_verifier', codeVerifier);
+            
+            crypto.subtle.digest('SHA-256', new TextEncoder().encode(codeVerifier))
+                .then(hash => {
+                    const codeChallenge = base64URLEncode(hash);
+                    
+                    const authUrl = `${ONSHAPE_BASE_URL}/oauth/authorize?` + new URLSearchParams({
+                        response_type: 'code',
+                        client_id: clientId,
+                        redirect_uri: REDIRECT_URI,
+                        state: generateRandomString(32),
+                        code_challenge: codeChallenge,
+                        code_challenge_method: 'S256',
+                        scope: 'OAuth2Read OAuth2Write'
+                    });
+                    
+                    window.location.href = authUrl;
+                });
+        }
+        
+        async function handleOAuthCallback(code) {
+            const clientId = sessionStorage.getItem('onshape_client_id');
+            const codeVerifier = sessionStorage.getItem('code_verifier');
+            
+            if (!clientId || !codeVerifier) {
+                showStatus('error', 'OAuth state lost. Please try logging in again.');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${ONSHAPE_BASE_URL}/oauth/token`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({
+                        grant_type: 'authorization_code',
+                        code: code,
+                        redirect_uri: REDIRECT_URI,
+                        client_id: clientId,
+                        code_verifier: codeVerifier
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Token exchange failed: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                accessToken = data.access_token;
+                sessionStorage.setItem('onshape_access_token', accessToken);
+                if (data.refresh_token) {
+                    sessionStorage.setItem('onshape_refresh_token', data.refresh_token);
+                }
+                
+                // Clean up URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+                
+                updateAuthStatus(true);
+                showStatus('success', '✅ Successfully connected to Onshape!');
+                
+            } catch (error) {
+                console.error('OAuth error:', error);
+                showStatus('error', `❌ Authentication failed: ${error.message}`);
+            }
+        }
+        
+        async function handleConfigurationRequest(button, action) {
+            if (!accessToken) {
+                showStatus('error', 'Please connect to Onshape first.');
+                return;
+            }
+            
+            const documentId = document.getElementById('documentId').value.trim();
+            const workspaceId = document.getElementById('workspaceId').value.trim();
+            const elementId = document.getElementById('elementId').value.trim();
+            const selectedConfig = document.getElementById('configuration').value;
+            
+            if (!documentId || !workspaceId || !elementId) {
+                showStatus('error', 'Please fill in all document information fields.');
+                return;
+            }
+            
+            button.disabled = true;
+            const originalText = button.textContent;
+            button.textContent = action === 'get' ? 'Getting...' : 'Applying...';
+            showStatus('info', `${action === 'get' ? 'Fetching' : 'Applying'} configuration...`);
+            
+            try {
+                if (action === 'get') {
+                    const url = `${ONSHAPE_BASE_URL}/api/v6/partstudios/d/${documentId}/w/${workspaceId}/e/${elementId}/configuration`;
+                    
+                    const response = await fetch(url, {
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status} ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log('Current configuration:', data);
+                    
+                    let infoText = '✅ Current Configuration Retrieved:\n\n';
+                    if (data.currentConfiguration) {
+                        infoText += `Configuration: ${JSON.stringify(data.currentConfiguration, null, 2)}`;
+                    } else if (data.configurationParameters) {
+                        infoText += 'Configuration Parameters:\n';
+                        data.configurationParameters.forEach(param => {
+                            infoText += `  ${param.parameterId}: ${param.parameterValue || 'N/A'}\n`;
+                        });
+                    } else {
+                        infoText += JSON.stringify(data, null, 2);
+                    }
+                    infoText += '\n\nSee browser console for full details.';
+                    
+                    showStatus('success', infoText);
+                    
+                } else {
+                    // Apply configuration
+                    const configUrl = `${ONSHAPE_BASE_URL}/api/v6/partstudios/d/${documentId}/w/${workspaceId}/e/${elementId}/configuration`;
+                    
+                    const getResponse = await fetch(configUrl, {
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    if (!getResponse.ok) {
+                        throw new Error(`Failed to get configuration: ${getResponse.status}`);
+                    }
+                    
+                    const currentConfig = await getResponse.json();
+                    console.log('Current config structure:', currentConfig);
+                    
+                    let configString = '';
+                    if (currentConfig.configurationParameters && currentConfig.configurationParameters.length > 0) {
+                        const configParam = currentConfig.configurationParameters[0];
+                        configString = `${configParam.parameterId}=${selectedConfig}`;
+                    } else {
+                        configString = `List=${selectedConfig}`;
+                    }
+                    
+                    console.log('Applying configuration string:', configString);
+                    
+                    const applyUrl = `${ONSHAPE_BASE_URL}/api/v6/partstudios/d/${documentId}/w/${workspaceId}/e/${elementId}/features?configuration=${encodeURIComponent(configString)}`;
+                    
+                    const applyResponse = await fetch(applyUrl, {
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    if (!applyResponse.ok) {
+                        const errorText = await applyResponse.text();
+                        throw new Error(`Failed to apply: ${applyResponse.status}\n${errorText}`);
+                    }
+                    
+                    const result = await applyResponse.json();
+                    console.log('Applied configuration result:', result);
+                    
+                    showStatus('success', `✅ Configuration "${selectedConfig}" applied!\n\nConfiguration string: ${configString}\n\nCheck console for details.`);
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('error', `❌ Error: ${error.message}`);
+            } finally {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+        }
+        
+        function updateAuthStatus(authenticated) {
+            const authStatus = document.getElementById('authStatus');
+            const loginBtn = document.getElementById('loginBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const mainContent = document.getElementById('mainContent');
+            
+            if (authenticated) {
+                authStatus.className = 'auth-status authenticated';
+                authStatus.innerHTML = '<span>✅ Connected to Onshape</span>';
+                loginBtn.classList.add('hidden');
+                logoutBtn.classList.remove('hidden');
+                mainContent.classList.remove('hidden');
+            } else {
+                authStatus.className = 'auth-status not-authenticated';
+                authStatus.innerHTML = '<span>❌ Not authenticated</span>';
+                loginBtn.classList.remove('hidden');
+                logoutBtn.classList.add('hidden');
+                mainContent.classList.add('hidden');
+            }
+        }
+        
+        function showStatus(type, message) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            statusDiv.style.whiteSpace = 'pre-line';
+        }
+        
+        function generateRandomString(length) {
+            const array = new Uint8Array(length);
+            crypto.getRandomValues(array);
+            return base64URLEncode(array);
+        }
+        
+        function base64URLEncode(buffer) {
+            const bytes = new Uint8Array(buffer);
+            let binary = '';
+            for (let i = 0; i < bytes.length; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary)
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=/g, '');
+        }
+    </script>
+</body>
+</html>
